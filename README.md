@@ -1,2 +1,3 @@
 # work-free
-work stuff related
+
+This is where i keep my daily day bash scripts.
