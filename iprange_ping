@@ -1,6 +1,6 @@
 #!/usr/bin/bash
-# ip tunnel checker.
-# Can be used with parallel
+# Nagios ip tunnel checker.
+# Can be used with parallel.
 
 start_ip=$1
 end_ip=$2
@@ -36,7 +36,7 @@ main(){
   done
 
   if [[ $down -eq 0 ]]; then
-    echo "OK- TunnelOK"
+    echo "PORT 25 OK: $start_ip is responding."
     exit 0
   else 
     echo "WARNING- $failedips"
