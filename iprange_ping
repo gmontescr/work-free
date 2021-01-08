@@ -1,0 +1,47 @@
+#!/usr/bin/bash
+# ip tunnel checker.
+# Can be used with parallel
+
+start_ip=$1
+end_ip=$2
+subnet=${start_ip%.*}
+failed=""
+down=0
+
+if [[ $# -ne 2 ]]; then
+  echo "WARNING- Arguments failed!"
+  exit 1
+fi
+
+check_ip(){
+  #change ping to desired approach.
+  ping -c1 -W1 -I $1 yahoo.com >/dev/null 2>&1
+  
+  if [[ $? -eq 0 ]]; then
+    continue
+  else
+    down=$((down+1))
+    failedips+="$1 "
+  fi
+}
+
+#export -f check_ip
+
+main(){
+  for i in $(seq ${start_ip##*.} ${end_ip##*.}); do
+    # to make ping parallel uncomment the following line and comment the next one.
+    # printf $subnet.$i | xargs -n 1 -P4 -I{} bash -c 'check_ip "$@"' \;
+    
+    check_ip $subnet.$i
+  done
+
+  if [[ $down -eq 0 ]]; then
+    echo "OK- TunnelOK"
+    exit 0
+  else 
+    echo "WARNING- $failedips"
+    exit 2
+  fi
+}
+
+main "$@"
