@@ -29,7 +29,7 @@ add(){
 
 
 main(){
-  add $user $pass
+  add $1 $2
 }
 
 main "$@"
