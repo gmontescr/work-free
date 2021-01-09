@@ -1,0 +1,35 @@
+#!/bin/bash
+# User add script.
+output(){
+  [[ $1 -eq 0 ]] && printf "%s\t%s\n" "$2 status:" "[OK]" || "%s\t%s\n" "$2 status:" "[FAILED]"
+}
+
+add(){
+  user=$1
+  pass=$2
+  
+  echo "Creating user: $user"
+  useradd -m $user
+  
+  echo $pass | passwd $user --stdin
+  usermod -aG wheel $user
+  output $? "Set password"
+  
+  mkdir /home/$user/.ssh/
+  ssh user@server "cat /home/$user/.ssh/authorized_keys" > /home/$user/.ssh/authorized_keys
+  output $? "Adding ssh key"
+  
+  chmod 700 /home/$user/.ssh
+  chmod 600 /home/$user/.ssh/authorized_keys
+
+  chown $user:$user /home/$user/.ssh
+  chown $user:$user /home/$user/.ssh/authorized_keys
+  output $? "User creation"
+}
+
+
+main(){
+  add $user $pass
+}
+
+main "$@"
