@@ -2,19 +2,19 @@
 #!/usr/bin/bash
 # postgresql wrapper like
 
+# huh 
 user="greenarrow_ro"
-access="PASSWORD"
-query=$1
-  
+access="Better not to use password as var?"
+
 usage(){
   echo "$0 select * from dual"; exit 1
 }
 
 main(){
-  if [[ $# -ne 1 ]] || [[ -z $query ]]; then
+  if [[ $# -ne 1 ]] || [[ -z $1 ]]; then
     usage 
   else 
-    PGPASSWORD=$access psql --pset=pager=off -U $user -d greenarrow -c "$query"
+    PGPASSWORD=$access psql --pset=pager=off -U $user -d greenarrow -c "$1"
   fi
 }
 
