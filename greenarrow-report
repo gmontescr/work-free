@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+# Green Arrow sent stats by today.
+endpoint="slack endpoint"
+
+slack_notification(){
+  printf -v data 'payload={\"channel_id\": \"channel_id\", \"username\": \"username\", \"text\": \"%s\"}' "$1"
+  curl -X POST --data-urlencode "$data" $endpoint
+  echo
+}
+
+
+main(){
+  main_query=$(cat <<EOF 
+    select b.listid, 
+           coalesce((total_messages), 0) as "Total Sent",
+           coalesce((total_messages - total_success - total_failure),0) as "Total inqueue"
+    from   sends a, sends_lists b
+    where  sendid not like ('%_-ic')
+    and    a.id = b.send_id
+    and    injtime_first > extract(epoch from (Now() - interval '1' day))
+    and    (total_messages - total_success - total_failure) > 100
+    order by 3 desc
+EOF
+)
+  data=$(psql -c "$main_query")
+  slack_notification "\`\`\`$data\`\`\`"  
+}
+
+main "$@"
