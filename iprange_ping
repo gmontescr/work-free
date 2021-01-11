@@ -8,14 +8,14 @@ subnet=${start_ip%.*}
 failed=""
 down=0
 
-if [[ $# -ne 2 ]]; then
+usage(){
   echo "WARNING- Arguments failed!"
   exit 1
-fi
+}
 
 check_ip(){
   #change ping to desired approach.
-  ping -c1 -W1 -I $1 yahoo.com >/dev/null 2>&1
+  ping -c1 -W1 -I $1 domain.com >/dev/null 2>&1
   
   if [[ $? -eq 0 ]]; then
     continue
@@ -25,22 +25,26 @@ check_ip(){
   fi
 }
 
+# uncomment to use xargs:
 #export -f check_ip
 
 main(){
-  for i in $(seq ${start_ip##*.} ${end_ip##*.}); do
-    # to make ping parallel uncomment the following line and comment the next one.
-    # printf $subnet.$i | xargs -n 1 -P4 -I{} bash -c 'check_ip "$@"' \;
-    
-    check_ip $subnet.$i
-  done
-
-  if [[ $down -eq 0 ]]; then
-    echo "PORT 25 OK: $start_ip is responding."
-    exit 0
+  if [[ $# -ne 2 ]]; then
+    usage
   else 
-    echo "WARNING- $failedips"
-    exit 2
+    for i in $(seq ${start_ip##*.} ${end_ip##*.}); do
+      # parallel ping:
+      # printf $subnet.$i | xargs -n 1 -P4 -I{} bash -c 'check_ip "$@"' \;
+      check_ip $subnet.$i
+    done
+
+    if [[ $down -eq 0 ]]; then
+      echo "PORT 25 OK: $start_ip is responding."
+      exit 0
+    else 
+      echo "WARNING- $failedips"
+      exit 2
+    fi
   fi
 }
 
