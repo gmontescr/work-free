@@ -1,0 +1,36 @@
+#!/usr/bin/bash
+# greenarrow mta total sent by virtualMTA:
+
+log="/var/hvmail/log/send-summary"
+#domain=$1
+
+main(){
+  main_query=$(cat <<EOF 
+  select sum(new_msg) 
+  from   stats_by_domain_outmtaid 
+  where  domain = (select id 
+                   from   domainid 
+                   where  domain = 'TOTAL')
+EOF
+)
+
+  sendid_query=$(cat <<EOF
+  select b.listid
+  from   sends a, sends_lists b
+  where  not (a.sendid LIKE '%_-ic')  
+  and    a.id = b.send_id 
+  and    injtime_first > extract(epoch from (Now() - interval '1' day))
+EOF
+)
+ 
+  domains=($(psql -t -c "$sendid_query"))
+  
+  for domain in "${domains[@]}"; do
+    senddbid=$(psql -t -c "select max(send_id) from sends_lists where listid = '$domain'" | grep -o -P '\d{2,}')
+    mod=$(($senddbid - ($senddbid % 100)))
+    db="${log}/$mod/$senddbid.db"
+    echo -e "$domain $(sqlite3 -cmd ".mode tabs" $db "$main_query")"
+  done
+}
+
+main "$@"
