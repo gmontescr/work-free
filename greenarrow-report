@@ -5,7 +5,7 @@ endpoint="slack endpoint"
 slack_notification(){
   printf -v data 'payload={\"channel_id\": \"U01GWQUKVS9\", \"username\": \"gmontes\", \"text\": \"%s\"}' "$1"
   curl -s -X POST --data-urlencode "$data" $endpoint > /dev/null
-  [[ $? -eq 0 ]] echo "Report has been sent!" || echo "Report has been failed!"
+  [[ $? -eq 0 ]] && echo "Report has been sent!" || echo "Report has been failed!"
 }
 
 
