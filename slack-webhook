@@ -1,0 +1,14 @@
+#!/usr/bin/bash
+# Bash function to send incoming webhooks to slack.
+# Change parameters: endpoint, channel, username.
+
+endpoint="your slack incoming webhook url"
+
+slack_notification(){
+  printf -v data 'payload={\"channel\": \"#CHANNEL\", \"username\": \"USERNAME\", \"text\": \"%s\"}' "$1"
+  curl -X POST --data-urlencode "$data" $endpoint
+}
+
+# how to run it?
+
+slack_notification "hello world!"
