@@ -1,0 +1,21 @@
+
+#!/usr/bin/bash
+# postgresql wrapper like
+
+user="greenarrow_ro"
+access="PASSWORD"
+query=$1
+  
+usage(){
+  echo "$0 \"select * from dual\""; exit 1
+}
+
+main(){
+  if [[ $# -ne 1 ]] || [[ -z $query ]]; then
+    usage 
+  else 
+    PGPASSWORD=$access psql --pset=pager=off -U $user -d greenarrow -c "$query"
+  fi
+}
+
+main "$@"
