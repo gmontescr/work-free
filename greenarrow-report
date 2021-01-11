@@ -1,13 +1,6 @@
 #!/usr/bin/bash
 # Green Arrow sent stats by today.
-endpoint="slack endpoint"
-
-slack_notification(){
-  printf -v data 'payload={\"channel_id\": \"U01GWQUKVS9\", \"username\": \"gmontes\", \"text\": \"%s\"}' "$1"
-  curl -s -X POST --data-urlencode "$data" $endpoint > /dev/null
-  [[ $? -eq 0 ]] && echo "Report has been sent!" || echo "Report has been failed!"
-}
-
+source /functions/slack-webhook
 
 main(){
   main_query=$(cat <<EOF 
