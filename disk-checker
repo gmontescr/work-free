@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+# Disk Usage check
+device=$1
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 device"
+  exit 1
+fi
+
+main()
+  usage=$(df -P /home 2>/dev/null | grep -oP '\d{1,2}(?=%)')
+  if [[ $? -ne 0 ]]; then
+    echo "ERROR: Partition not found!"
+    exit 1
+  fi
+
+  if [[ $usage -gt 90 ]]; then
+    echo "CRITICAL- $device usage is above 90%" 
+    exit 2
+  else 
+    echo "OK- $device usage is below 90%"
+    exit 0
+  fi
+
+main "$@"
