@@ -2,6 +2,6 @@
 # Output function:
 
 output(){
-   opt="%-40s %10s\n"
+   opt="%-20s %10s\n"
   [[ $1 -eq 0 ]] && printf $opt "$2" "status: [OK]" || printf $opt "$2" "status: [FAILED]"
 }
