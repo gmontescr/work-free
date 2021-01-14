@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # Green Arrow sent stats by today.
-source /functions/slack-webhook
+source ./functions/slack-webhook
 
 main(){
   main_query=$(cat <<EOF 
