@@ -1,0 +1,20 @@
+#!/usr/bin/bash
+# folder to aws using aws cli.
+source ./functions/slack_notification
+
+log="/var/log/log"
+path="/mnt/nfs/"
+yesterday=$(date -d "yesterday" '+%Y%m%d')
+
+main(){
+  if [[ ! -d $path/$yesterday ]]; then
+    slack_notification "Folder $yesterday/ folder has not been created!"
+  else 
+    slack_notification "Moving folder to aws!"
+    touch $log$yesterday.log
+    aws s3 cp $path/$yesterday/ s3://opg-backups/first-party/$yesterday/ --recursive 2>&1 > $log$yesterday.log
+    [[ $? -eq 0 ]] && slack_notification "Folder $yesterday/ has been uploaded!"
+  fi
+}
+
+main "$@"
