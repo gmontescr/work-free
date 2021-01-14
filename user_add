@@ -1,6 +1,6 @@
 #!/bin/bash
 # User add script.
-source /functions/output
+source ./functions/output
 
 usage(){
   echo "$0 username password"
