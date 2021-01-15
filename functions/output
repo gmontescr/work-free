@@ -1,7 +1,7 @@
 #!/usr/bin/bash
-# Output function:
+# Format output function:
 
 output(){
-   opt="%-20s %10s\n"
+   opt="%-30s %10s\n"
   [[ $1 -eq 0 ]] && printf $opt "$2" "status: [OK]" || printf $opt "$2" "status: [FAILED]"
 }
