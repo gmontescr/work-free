@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+# PostgreSQL database wrapper:
+# User and password should be called from env.
+# Not the best approach.
+user=USERENV
+access=PASSENV
+query=$1
+  
+usage(){
+  echo "$0 \"select * from dual\""
+  exit 1
+}
+
+main(){
+  if [[ $# -ne 1 ]] || [[ -z $query ]]; then
+    usage 
+  else 
+    PGPASSWORD=$access psql --pset=pager=off -U $user -d greenarrow -c "$query"
+  fi
+}
+
+main "$@"
