@@ -11,4 +11,4 @@ slack_notification(){
 
 # how to run it?
 
-slack_notification "hello world!"
+slack_notification "\`\`\`hello world!\`\`\`"
