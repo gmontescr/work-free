@@ -1,0 +1,119 @@
+#!/usr/bin/bash
+# waterfall script to install fail2ban as requested.
+source ./functions/output
+
+# Installing dependencies: 
+echo "Installing dependencies:"
+yum install epel-release -q -y
+output $? "epel-release install" 
+
+# Installing iptables package:
+echo "Installing iptables package:"
+yum install iptables-services -q -y
+output $? "iptables-service install"
+
+#Installing fail2ban package:
+echo "Installing fail2ban package:"
+yum install fail2ban -q -y  
+output $? "fail2ban install"
+
+# Enabling fail2ban service:
+echo "Enabling fail2ban service:"
+systemctl enable fail2ban 
+output $? "fail2ban enable"
+
+# Adding fail2ban std rule:
+echo "Adding fail2ban std rule:"
+cat << EOF1 > /etc/fail2ban/jail.local
+[DEFAULT]
+# Ban hosts for one hour:
+bantime = 3600
+# Override /etc/fail2ban/jail.d/00-firewalld.conf:
+banaction = iptables-multiport
+[sshd]
+enabled = true
+EOF1
+output $? "Local settings" 
+
+# Add GA fail2ban rules.
+echo "Add GA fail2ban rules."
+cat << EOF2 > /etc/fail2ban/filter.d/greenarrow-smtpd.conf
+[Definition]
+failregex = smtpd: smtp-auth authentication failure from \(<HOST>\) for username
+EOF2
+output $? "Fail2ban GA filter" 
+
+# Increase ban time to offenders:
+cat << EOF3 >  /etc/fail2ban/filter.d/f2b-loop.conf
+# Fail2Ban configuration file for subsequent bans
+#
+[INCLUDES]
+before = common.conf
+[Definition]
+failregex = \]\s+Ban\s+<HOST>
+ignoreregex = \[f2b-loop.*\]\s+Ban\s+<HOST>
+#
+# Author: Walter Heitman Jr. http://blog.shanock.com
+Now append/incorporate these entries into /etc/fail2ban/jail.local. Do not replace your existing file. Modify the values to your own preferences.
+[DEFAULT]
+bantime = 10800 ;3 hours
+findtime = 86400 ;1 day
+maxretry = 5
+
+[f2b-loop2]
+enabled = true
+filter = f2b-loop
+bantime = 86400 ;1 day
+findtime = 604800 ;1 week
+logpath = /var/log/fail2ban.log
+maxretry = 2
+
+[f2b-loop3]
+enabled = true
+filter = f2b-loop
+bantime = 604800 ;1 week
+findtime = 2592000 ;1 month
+logpath = /var/log/fail2ban.log
+maxretry = 3
+
+[f2b-loop4]
+enabled = true
+filter = f2b-loop
+bantime = 2592000 ;1 month
+findtime = 15552000 ;6 months
+logpath = /var/log/fail2ban.log
+maxretry = 6
+[f2b-loop5]
+enabled = true
+filter = f2b-loop
+bantime = 15552000 ;6 months
+findtime = 31536000 ;1 year
+logpath = /var/log/fail2ban.log
+maxretry = 9
+EOF3
+output $? "Ban time offenders" 
+
+# Restarting services:
+echo "Restarting fail2ban & iptables services:"
+systemctl restart fail2ban 
+output $? "fail2ban restart" 
+
+systemctl restart iptables 
+output $? "iptables restart" 
+
+# Checking systemctl fail2ban status
+echo "Checking systemctl fail2ban status:"
+systemctl is-active --quiet service fail2ban
+output $? "fail2ban service" 
+echo 
+
+#Checking fail2ban-client sshd status:
+echo "Checking fail2ban-client sshd status:"
+fail2ban-client status
+echo 
+
+# Checking fail2ban sshd status
+echo "Checking fail2ban sshd status:"
+fail2ban-client status sshd
+echo 
+
