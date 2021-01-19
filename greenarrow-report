@@ -32,9 +32,6 @@ FROM   status_messages_count_by_domain_outmtaid aa,
        domainid cc 
 WHERE  aa.smsgid = bb.id 
        AND aa.domain = cc.id 
-       AND aa.domain IN (SELECT id
-                         FROM   domainid
-                         WHERE  domain = 'icloud.com') 
        AND aa.code IN ( 2, 3, 4 ) 
 GROUP  BY message 
 ORDER  BY 5 DESC, 
