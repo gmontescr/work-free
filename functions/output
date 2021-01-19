@@ -2,6 +2,5 @@
 # Format output function:
 
 output(){
-   opt="%-30s %10s\n"
-  [[ $1 -eq 0 ]] && printf $opt "$2" "status: [OK]" || printf $opt "$2" "status: [FAILED]"
+  [[ $1 -eq 0 ]] && printf "\t\t%-20s %10s\n" "$2" "status: [OK]" || printf "\t\t%-20s %10s\n" "$2" "status: [FAILED]"
 }
