@@ -1,22 +1,69 @@
+
+
+
 #!/usr/bin/bash
-# Green Arrow sent stats by today.
-source ./functions/slack-webhook
+# Daily report by mailclass
+
+log="/var/hvmail/log/send-summary"
+domain=$1
+
+if [[ $# -ne 1 ]]; then
+  echo "$0 mailclass"
+  exit 1
+fi
 
 main(){
-  main_query=$(cat <<EOF 
-    select b.listid, 
-           coalesce((total_messages), 0) as "Total Sent",
-           coalesce((total_messages - total_success - total_failure),0) as "Total inqueue"
-    from   sends a, sends_lists b
-    where  sendid not like ('%_-ic')
-    and    a.id = b.send_id
-    and    injtime_first > extract(epoch from (Now() - interval '1' day))
-    and    (total_messages - total_success - total_failure) > 100
-    order by 3 desc
+main_query=$(cat << EOF
+SELECT b.domain       AS 'Domain', 
+       Sum(a.new_msg) AS 'Total sent', 
+       Sum(a.failed)  AS 'Total Failure', 
+       ( Sum(a.new_msg) - Sum(a.accepted) - Sum(a.failed) ) AS 'Total Inqueue', 
+       '' as 'Error Message'
+FROM   stats_by_domain_outmtaid a, 
+       domainid b 
+WHERE  a.domain = b.id 
+GROUP  BY b.domain 
+UNION ALL 
+SELECT cc.domain     AS 'Domain', 
+       '-', 
+       Sum(aa.count) AS message_count, 
+       '-', 
+       bb.message    AS message 
+FROM   status_messages_count_by_domain_outmtaid aa, 
+       status_messages bb, 
+       domainid cc 
+WHERE  aa.smsgid = bb.id 
+       AND aa.domain = cc.id 
+       AND aa.domain IN (SELECT id 
+                         FROM   domainid 
+                         WHERE  domain = 'icloud.com') 
+       AND aa.code IN ( 2, 3, 4 ) 
+GROUP  BY message 
+ORDER  BY message_count DESC, 
+          message 
 EOF
 )
-  data=$(psql -c "$main_query")
-  slack_notification "\`\`\`$data\`\`\`"  
+
+sendid_query=$(cat << EOF2 
+SELECT b.listid 
+FROM   sends a, 
+       sends_lists b 
+WHERE  NOT ( a.sendid LIKE '%_-ic' ) 
+       AND a.id = b.send_id 
+       AND b.listid = '$domain' 
+       AND injtime_first > Extract(epoch FROM ( Now() - interval '1' day ))
+EOF2
+)
+ 
+  domains=($(psql -t -c "$sendid_query"))
+  
+  for domain in "${domains[@]}"; do
+    senddbid=$(psql -t -c "select max(send_id) from sends_lists where listid = '$domain'" | grep -o -P '\d{2,}')
+    mod=$(($senddbid - ($senddbid % 100)))
+    db="${log}/$mod/$senddbid.db"
+    
+    sqlite3 -header $db "$main_query" | awk -F'|' '{printf "%-22s  %-12s %-17s %-14s %-30s\n", $1" ",$2" ",$3" ",$4" ",$5" "}'
+  done
 }
 
 main "$@"
