@@ -1,23 +1,29 @@
 #!/usr/bin/bash
 # AWS S3 backup removal.
-# Delete folders older than 3 days for n amount of servers.
-# 
+# Delete folders older than 3 days.
+source ./functions/slack_notification
 
-bucket="BUCKETNAME"
-servers=($(aws s3 ls $bucket | awk '{print $2}'))
+bucket="s3://BUCKET/"
+firstparty=($(aws s3 ls ${bucket}/ | awk '{print $2}' | grep -Po '\d{8}'))
 deleteday=$(date -d '-3 days' +%Y%m%d)
+log="/var/log/LOG/"
+
+delete_folder(){
+  aws s3 rm ${bucket}first-party/$1/ --recursive 2>&1 > $log${1}_delete.log
+  find $log -iname "$1*" -exec rm -rf {} \;
+}
 
 main(){
-  for server in "${servers[@]}"; do
-    folder_date=($(aws s3 ls $bucket$server | awk '{print $2}' | grep -Po '\d{8}'))
-    
-    if [[ ! -z $folder_date ]]; then
-      for day in "${folder_date[@]}"; do
-        if [[ $day -lt $deleteday ]]; then
-          aws s3 rm $bucket$server$day/ --recursive
-        fi
-      done
-    fi  
+  for folder in "${firstparty[@]}"; do
+    if [[ $folder -lt $deleteday ]]; then
+     delete_folder ${folder}
+
+      if [[ $? -eq 0 ]];then
+       slack_notification "AWS $folder has been deleted!"
+     else
+       slack_notification "AWS folders up to date!!"
+     fi
+    fi
   done
 }
 
