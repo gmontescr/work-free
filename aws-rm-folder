@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+# AWS S3 backup removal.
+# Delete folders older than 3 days for n amount of servers.
+# 
+
+bucket="BUCKETNAME"
+servers=($(aws s3 ls $bucket | awk '{print $2}'))
+deleteday=$(date -d '-3 days' +%Y%m%d)
+
+main(){
+  for server in "${servers[@]}"; do
+    folder_date=($(aws s3 ls $bucket$server | awk '{print $2}' | grep -Po '\d{8}'))
+    
+    if [[ ! -z $folder_date ]]; then
+      for day in "${folder_date[@]}"; do
+        if [[ $day -lt $deleteday ]]; then
+          aws s3 rm $bucket$server$day/ --recursive
+        fi
+      done
+    fi  
+  done
+}
+
+main "$@"
