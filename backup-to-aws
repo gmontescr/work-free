@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # AWS S3 backup removal.
 # Delete folders older than 3 days.
-source ./functions/output
+source ./functions/slack_notification
 
 bucket="s3://bucket/"
 firstparty=($(aws s3 ls ${bucket}folder/ | awk '{print $2}' | grep -Po '\d{8}'))
