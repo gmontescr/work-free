@@ -1,20 +1,25 @@
 #!/usr/bin/bash
-# folder to aws using aws cli.
-source ./functions/slack_notification
+# AWS S3 backup removal.
+# Delete folders older than 3 days.
+source ./functions/output
 
-log="/var/log/log"
-path="/mnt/nfs/"
-yesterday=$(date -d "yesterday" '+%Y%m%d')
+bucket="s3://bucket/"
+firstparty=($(aws s3 ls ${bucket}folder/ | awk '{print $2}' | grep -Po '\d{8}'))
+deleteday=$(date -d '-3 days' +%Y%m%d)
+log="/var/log/LOG"
+
+delete_folder(){
+  aws s3 rm ${bucket}folder/$1/ --recursive
+  find $log -iname "$1*" -exec rm -rf {} \;
+}
 
 main(){
-  if [[ ! -d $path/$yesterday ]]; then
-    slack_notification "Folder $yesterday/ folder has not been created!"
-  else 
-    slack_notification "Moving folder to aws!"
-    touch $log$yesterday.log
-    aws s3 cp $path/$yesterday/ s3://opg-backups/first-party/$yesterday/ --recursive 2>&1 > $log$yesterday.log
-    [[ $? -eq 0 ]] && slack_notification "Folder $yesterday/ has been uploaded!"
-  fi
+  for folder in "${firstparty[@]}"; do
+    if [[ $folder -lt $deleteday ]]; then
+     delete_folder ${folder}
+     slack_notification "Backup $folder has been deleted!"
+    fi
+  done
 }
 
 main "$@"
