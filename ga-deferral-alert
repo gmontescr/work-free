@@ -1,0 +1,55 @@
+#!/usr/bin/bash
+# Daily report by mailclass
+log="/var/hvmail/log/send-summary"
+source ./functions/slack_notification
+
+sendids=$(cat << EOF2
+SELECT b.listid 
+FROM   sends a 
+       join sends_lists b 
+         ON a.id = b.send_id 
+WHERE  injtime_first > Extract(epoch FROM ( Now() - interval '1' day )) 
+       AND a.sendid NOT LIKE '%-ic' 
+       AND b.listid NOT LIKE '' 
+EOF2
+)
+
+main_query=$(cat << EOF
+SELECT sum(aa.count) AS 'Total deferral', 
+       substr(bb.message,1,150)    AS message,
+       '|'
+FROM   status_messages_count_by_domain_outmtaid aa, 
+       status_messages bb, 
+       domainid cc
+WHERE  aa.smsgid = bb.id 
+       AND aa.domain = cc.id 
+       AND cc.domain = 'yahoo.com'
+       AND (bb.message like '%ESP code%'
+            or bb.message like '%ESP code%')
+       AND aa.code IN () 
+GROUP  BY message 
+ORDER  BY 1 DESC
+EOF
+)
+
+# Main functions, would be better if run in python.
+# The app uses 2 different DBs, so had to retrieve the lists ids before 
+# using sqlite files to retrieve the data we are looking.
+main(){
+  domains=($(psql -t -c "$sendids"))
+
+  for domain in "${domains[@]}"; do
+    senddbid=$(psql -t -c "select max(send_id) from sends_lists where listid = '$domain'" | grep -o -P '\d{2,}')
+    mod=$(($senddbid - ($senddbid % 100)))
+    db="${log}/$mod/$senddbid.db"
+    select+=($(printf "%s %s\n" "$domain" "$(sqlite3 -separator $'\t' $db "$main_query")" | awk '{if ($2) print $0 }'))
+  done
+
+  slack_text=$(echo "${select[@]}" | tr '|' '\n' | sed 's/^\ //g')
+
+  if [[ ! -z $slack_text ]]; then
+    slack_notification "\`\`\` $slack_text \`\`\`"
+  fi
+
+}
+main "$@"
