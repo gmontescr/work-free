@@ -2,6 +2,7 @@
 # HTTP CHECK.
 # USAGE: endpoint-checker FILE
 # FILE: could contain one or more urls separated by new lines.
+declare -a urls
 file=$1
 
 usage(){
@@ -12,19 +13,18 @@ usage(){
 url_validation(){
   response=$(curl -k -X GET -s -o /dev/null -w '%{http_code}\n' "$1")
   if [[ ! $response =~ (200|301) ]]; then
-    printf '%-110s%-10s\n' "$1" "$response"
+    urls=($(printf '%-110s%-10s\n' "$1" "$response"))
   fi
 }
-
-#export -f url_validation
 
 main(){
   [[ $# -ne 1 ]] && usage
 
   while read url; do
-    #printf $url | xargs -n 1 -P4 -I{} bash -c 'url_validation "$@"' \; 
     url_validation $url
-  done < $1
+  done < $file
+  
+  printf '%-120s %s\n' "${urls[@]}"
 }
 
 main "$@"
