@@ -11,18 +11,19 @@ usage(){
 
 url_validation(){
   response=$(curl -k -X GET -s -o /dev/null -w '%{http_code}\n' "$1")
-  if [[ ! $response =~ 200 ]] || [[ ! $response =~ 301 ]]; then
+  if [[ ! $response =~ 200 ]]; then
     printf '%-110s%-10s\n' "$1" "$response"
   fi
 }
 
-export -f url_validation
+#export -f url_validation
 
 main(){
   [[ $# -ne 1 ]] && usage
 
   while read url; do
-    printf $url | xargs -n 1 -P4 -I{} bash -c 'url_validation "$@"' \;      
+    #printf $url | xargs -n 1 -P4 -I{} bash -c 'url_validation "$@"' \; 
+    url_validation $url
   done < $1
 }
 
