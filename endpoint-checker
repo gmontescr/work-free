@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+# HTTP CHECK.
+# USAGE: endpoint-checker FILE
+# FILE: could contain one or more urls separated by new lines.
+
+url_validation(){
+  response=$(curl -k -X GET -s -o /dev/null -w '%{http_code}\n' "$1")
+  if [[ ! $response =~ 200 ]] || [[ ! $response =~ 301 ]]; then
+    printf '%-110s%-10s\n' "$1" "$response"
+  fi
+}
+
+export -f url_validation
+
+main(){
+  while read url; do
+    url_validation $url
+  done < $1
+}
+
+main "$@"
