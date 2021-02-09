@@ -2,6 +2,12 @@
 # HTTP CHECK.
 # USAGE: endpoint-checker FILE
 # FILE: could contain one or more urls separated by new lines.
+file=$1
+
+usage(){
+  echo "$0 file"
+  exit 1
+}
 
 url_validation(){
   response=$(curl -k -X GET -s -o /dev/null -w '%{http_code}\n' "$1")
@@ -13,8 +19,10 @@ url_validation(){
 export -f url_validation
 
 main(){
+  [[ $# -ne 1 ]] && usage
+
   while read url; do
-    url_validation $url
+    printf $url | xargs -n 1 -P4 -I{} bash -c 'url_validation "$@"' \;      
   done < $1
 }
 
