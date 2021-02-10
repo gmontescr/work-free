@@ -12,7 +12,7 @@ usage(){
 
 url_validation(){
   response=$(curl -k -X GET -s -o /dev/null -w '%{http_code}\n' "$1")
-  if [[ ! $response =~ (200|301) ]]; then
+  if [[ ! $response =~ (200|301|302) ]]; then
     urls=($(printf '%-110s%-10s\n' "$1" "$response"))
   fi
 }
