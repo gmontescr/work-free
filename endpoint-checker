@@ -1,30 +1,29 @@
 #!/usr/bin/bash
 # HTTP CHECK.
-# USAGE: endpoint-checker FILE
+# USAGE: url_validator FILE
 # FILE: could contain one or more urls separated by new lines.
+source PATH/functions/slack_notification
 declare -a urls
-file=$1
-
-usage(){
-  echo "$0 file"
-  exit 1
-}
+file=PATH
 
 url_validation(){
   response=$(curl -k -X GET -s -o /dev/null -w '%{http_code}\n' "$1")
   if [[ ! $response =~ (200|301|302) ]]; then
-    urls=($(printf '%-110s%-10s\n' "$1" "$response"))
+    urls+=($(printf '%s\n' "$1"))
   fi
 }
 
 main(){
-  [[ $# -ne 1 ]] && usage
 
   while read url; do
     url_validation $url
   done < $file
   
-  printf '%-120s %s\n' "${urls[@]}"
+  to_slack=$(printf "%s\n"  "${urls[@]}")
+
+  if [[ ! -z $to_slack ]]; then
+    slack_notification_1p "\`\`\`Unreachable URLs:\n$to_slack\`\`\`"
+  fi
 }
 
 main "$@"
