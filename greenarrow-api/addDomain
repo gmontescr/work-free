@@ -20,4 +20,12 @@ def create_domain():
   "domain": sys.argv[1],
   "email_status": "normal" }
   })
-  return requests.post(endpoint, data, auth=(user, password))
+  
+  try:
+    response = requests.post(endpoint, data, auth=(user, password))
+    if response == 200:
+      return "Domain has been added succesfully."
+  except requests.ConnectionError:
+    return "Failed to connect, try again."
+  
+# call the function huh?
