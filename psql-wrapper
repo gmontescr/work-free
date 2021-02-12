@@ -11,12 +11,10 @@ usage(){
   exit 1
 }
 
+[[ $# -ne 1 ]] || [[ -z $query ]] && usage 
+
 main(){
-  if [[ $# -ne 1 ]] || [[ -z $query ]]; then
-    usage 
-  else 
     PGPASSWORD=$access psql --pset=pager=off -U $user -d greenarrow -c "$query"
-  fi
 }
 
 main "$@"
