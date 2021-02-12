@@ -1,4 +1,0 @@
-#!/usr/bin/python
-from get-id import *
-
-print get_domain_in('auassistance')
