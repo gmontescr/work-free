@@ -4,7 +4,7 @@ from requests.auth import HTTPBasicAuth
 requests.packages.urllib3.disable_warnings()	
 
 def get_domain_id(domain):	
-    endpoint = 'https://hostname/ga/api/v3/eng/incoming_email_domains'	
+    endpoint = 'https://URL/ga/api/v3/eng/incoming_email_domains'	
     response = requests.get(endpoint, auth=(user, password))	
     data = json.loads(response.text)['data']['domains']	
 
