@@ -6,7 +6,6 @@ requests.packages.urllib3.disable_warnings()
 
 user='user'
 password='password'
-endpoint = "https://URL/ga/api/v3/eng/incoming_email_domains"
 
 try:
   sys.argv[1]
@@ -15,6 +14,7 @@ except IndexError:
   exit(1)
 
 def create_domain():
+  endpoint = "https://URL/ga/api/v3/eng/incoming_email_domains"
   data = json.dumps({
   "domain": {
   "domain": sys.argv[1],
