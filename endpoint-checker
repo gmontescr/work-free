@@ -1,7 +1,5 @@
 #!/usr/bin/bash
-# HTTP CHECK.
 # USAGE: url_validator FILE
-# FILE: could contain one or more urls separated by new lines.
 source PATH/functions/slack_notification
 declare -a urls
 file=PATH
@@ -14,7 +12,6 @@ url_validation(){
 }
 
 main(){
-
   while read url; do
     url_validation $url
   done < $file
