@@ -1,0 +1,23 @@
+#!/usr/bin/python
+# Add Domain to greenarrow:
+import requests, json, sys
+from requests.auth import HTTPBasicAuth
+requests.packages.urllib3.disable_warnings()
+
+user='user'
+password='password'
+endpoint = "https://URL/ga/api/v3/eng/incoming_email_domains"
+
+try:
+  sys.argv[1]
+except IndexError:
+  print "Usage: " + sys.argv[0] + " domain.com"
+  exit(1)
+
+def create_domain():
+  data = json.dumps({
+  "domain": {
+  "domain": sys.argv[1],
+  "email_status": "normal" }
+  })
+  return requests.post(endpoint, data, auth=(user, password))
