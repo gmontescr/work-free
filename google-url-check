@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+# install dependencies: gspread, oauth2client
+# create google api credentials.
+# create a spreadsheet in google drive with urls, just one column.
+
+import gspread
+import requests
+from oauth2client.service_account import ServiceAccountCredentials
+
+
+def getData():
+  scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+  credentials = ServiceAccountCredentials.from_json_keyfile_name("APPLICATION_NAME.json", scope)
+  client = gspread.authorize(credentials)
+  sheet = client.open("NAME_SHEET").sheet1
+
+  return sheet.get_all_values()
+
+def get_status_code(url):
+  try:
+    response = requests.get(url)
+    if len(response.history) > 0:
+      code = response.history[0].status_code
+
+      if cod > 301 or code > 302:
+        return url+'\t'+str(code)
+    else:
+      code = response.status_code
+      if cod > 200 or code > 299:
+        return url+'\t'+str(code)
+  except requests.ConnectionError:
+    return '0\t\t\t\t'
+
+def main():
+  data = getData()
+  for i in range(1, len(data)):
+    print(get_status_code(*(data[i])))
+
+if __name__ == "__main__":
+  main()
