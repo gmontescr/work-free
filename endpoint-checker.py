@@ -13,28 +13,33 @@ def getData():
   credentials = ServiceAccountCredentials.from_json_keyfile_name("APPLICATION_NAME.json", scope)
   client = gspread.authorize(credentials)
   sheet = client.open("NAME_SHEET").sheet1
-
   return sheet.get_all_values()
 
 def get_status_code(url):
   try:
     response = requests.get(url)
     if len(response.history) > 0:
-      code = response.history[0].status_code
-
-      if cod > 301 or code > 302:
-        return url+'\t'+str(code)
+      return response.history[0].status_code
     else:
-      code = response.status_code
-      if cod > 200 or code > 299:
-        return url+'\t'+str(code)
+      return response.status_code
   except requests.ConnectionError:
-    return '0\t\t\t\t'
-
+    return '0'
+  
+def to_slack(slackText):
+  endpoint = "slackEndpoint"
+  payload= json.dumps("{\"channel_id\": \"CHANNELID\", \"username\": \"webhookbot\", \"text\": \"slackText\"}")
+  response = requests.post(endpoint, json=payload)
+  return response
+  
 def main():
   data = getData()
+  code = get_status_code(*data[i])
+ 
   for i in range(1, len(data)):
-    print(get_status_code(*(data[i])))
+    code = get_status_code(*data[i])
+    if code not in {200,301,302}:
+      slackText += str(*data[i]) + '\n' 
+  print(to_slack(slackText))
 
 if __name__ == "__main__":
   main()
