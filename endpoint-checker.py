@@ -22,7 +22,7 @@ def get_status_code(url):
       return response.history[0].status_code
     else:
       return response.status_code
-  except requests.ConnectionError:
+  except (requests.exceptions.MissingSchema, requests.ConnectionError) as error:
     return '0'
   
 def to_slack(slackText):
