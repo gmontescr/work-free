@@ -26,11 +26,15 @@ def get_status_code(url):
     return '0'
   
 def to_slack(slackText):
-  endpoint = "slackEndpoint"
-  payload= json.dumps("{\"channel_id\": \"CHANNELID\", \"username\": \"webhookbot\", \"text\": \"slackText\"}")
-  response = requests.post(endpoint, json=payload)
+  endpoint = "webhook-endpoint"
+  slack_data = {'text': ""+slackText+""}
+  response = requests.post(endpoint, data=json.dumps(slack_data), 
+                           headers={'Content-Type': 'application/json'})
+
+  if response.status_code != 200:
+    return 'Post to slack error %d\n' % (response.status_code)
   return response
-  
+
 def main():
   data = getData()
   code = get_status_code(*data[i])
