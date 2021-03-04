@@ -1,0 +1,14 @@
+#!/usr/bin/python
+# Getid script.
+# return the id of the incoming email endpoint.
+
+import requests, json, os
+from requests.auth import HTTPBasicAuth
+requests.packages.urllib3.disable_warnings()
+
+# need to change the way we pass credentials.
+creds = ["USER", "PASS"]
+host = "https://ENDPOINT"
+
+def get_request(data, endpoint):
+  return requests.get(endpoint, data=data, auth=(creds[0], creds[1])).json()
