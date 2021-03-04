@@ -1,0 +1,124 @@
+#!/usr/bin/python3
+import requests,json, random, string
+from getid import get_incoming_id, get_vmta_id
+
+# this needs to be changed:
+creds = ["USER", "PASS"]
+host = "https://ENDPOINT"
+
+def post_request(data, endpoint):
+  return requests.post(endpoint, data, auth=(creds[0], creds[1]))
+
+def gen_passwd(lCount, dCount):
+  letters =  ''.join((random.choice(string.ascii_letters) for i in range(lCount)))
+  digits = ''.join((random.choice(string.digits) for i in range(dCount)))
+  passwd = list(letters+digits)
+  random.shuffle(passwd)
+  return ''.join(passwd)
+  
+def create_urldomain(domain):
+  data = json.dumps({
+    "url_domain": {
+      "domain": domain,
+      "ssl": False 
+    }
+  })
+  new_urldomain = post_request(data, host + "/ga/api/v3/eng/url_domains")
+  return new_urldomain.text
+
+def create_domain(domain):
+  data = json.dumps({
+    "domain": {
+      "domain": domain,
+       "email_status": "disabled" 
+      }
+  })
+  new_domain = post_request(data, host + "/ga/api/v3/eng/incoming_email_domains")
+  return new_domain.text
+
+def create_fbl(domain, fbl):
+  api_id = get_incoming_id(domain)['data']['domains'][0]['id']
+  data = json.dumps({ 
+    "mailbox": {
+      "localpart": fbl 
+     }
+  })
+  new_fbl = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/spam_complaint_mailboxes" % api_id)
+  return new_fbl.text
+
+def create_bounce(domain, address):
+  api_id = get_incoming_id(domain)['data']['domains'][0]['id']
+  data = json.dumps({
+    "mailbox": {
+      "localpart": address
+     }
+  })
+  new_bounce = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/bounce_mailboxes" % api_id)
+  return new_bounce.text
+
+
+def create_forward(domain,name):
+  api_id = get_incoming_id(domain)['data']['domains'][0]['id']
+  data = json.dumps({
+    "mailbox": {
+      "localpart": name,
+      "forward_to": [
+        "EMAIL@EMAIL.com"
+      ],
+      "is_wildcard": True
+    }
+  })
+  new_forward = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/forwarding_mailboxes" % api_id)
+  return new_forward.text
+
+
+def create_user(domain, username):
+  api_id = get_incoming_id(domain)['data']['domains'][0]['id']
+  data = json.dumps({
+    "mailbox": {
+      "localpart": username,
+      "is_wildcard": True,
+      "password": gen_passwd(12,4),
+      "delivery_mode": "local"
+    }
+  })
+  new_user = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/user_mailboxes" % api_id)
+  return new_user.text
+
+
+def create_vmta(name, ipaddress, hostname):
+  data = json.dumps({
+    "ip_address": {
+      "name": name,
+      "ip": ipaddress,
+      "hostname": hostname,
+      "throttling_template": {
+        "name": "Day 1"
+      }
+    }
+  })
+  new_vmta =  post_request(data, host + "/ga/api/v3/eng/ip_addresses")
+  return new_vmta.text  
+
+def create_mailclass(name, domain):
+  data = json.dumps({
+      "mail_class": {
+        "name": name,
+        "listid": name,
+        "virtual_mta": {
+          "name": name
+        },
+      "track_clicks_and_opens": True,
+      "url_domain": {
+        "domain": domain
+      }
+    }
+  })
+  new_mailclass =  post_request(data, host + "/ga/api/v3/eng/mail_classes")
+  return new_mailclass.text
+
+def main():
+  #need a function to run the creation of every step.
+
+if __name__ == "__main__":
+  main()
