@@ -24,7 +24,7 @@ def create_urldomain(domain):
     }
   })
   new_urldomain = post_request(data, host + "/ga/api/v3/eng/url_domains")
-  return new_urldomain.text
+  return "Creating new url domain:\n" + new_urldomain.text
 
 def create_domain(domain):
   data = json.dumps({
@@ -34,7 +34,7 @@ def create_domain(domain):
       }
   })
   new_domain = post_request(data, host + "/ga/api/v3/eng/incoming_email_domains")
-  return new_domain.text
+  return "Creating new domain:\n" + new_domain.text
 
 def create_fbl(domain, fbl):
   api_id = get_incoming_id(domain)['data']['domains'][0]['id']
@@ -44,7 +44,8 @@ def create_fbl(domain, fbl):
      }
   })
   new_fbl = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/spam_complaint_mailboxes" % api_id)
-  return new_fbl.text
+  time.sleep(1)
+  return "Creating feedbackloop: %s" % fbl + new_fbl.text
 
 def create_bounce(domain, address):
   api_id = get_incoming_id(domain)['data']['domains'][0]['id']
@@ -54,7 +55,7 @@ def create_bounce(domain, address):
      }
   })
   new_bounce = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/bounce_mailboxes" % api_id)
-  return new_bounce.text
+  return "Creating bounce: " + new_bounce.text
 
 
 def create_forward(domain,name):
@@ -69,7 +70,7 @@ def create_forward(domain,name):
     }
   })
   new_forward = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/forwarding_mailboxes" % api_id)
-  return new_forward.text
+  return "Creating forward: " + new_forward.text
 
 
 def create_user(domain, username):
@@ -83,7 +84,7 @@ def create_user(domain, username):
     }
   })
   new_user = post_request(data, host +  "/ga/api/v3/eng/incoming_email_domains/%s/user_mailboxes" % api_id)
-  return new_user.text
+  return "Creating user mailbox: \n" + new_user.text
 
 
 def create_vmta(name, ipaddress, hostname):
@@ -98,7 +99,7 @@ def create_vmta(name, ipaddress, hostname):
     }
   })
   new_vmta =  post_request(data, host + "/ga/api/v3/eng/ip_addresses")
-  return new_vmta.text  
+  return "Creating VMTA:\n" + new_vmta.text  
 
 def create_mailclass(name, domain):
   data = json.dumps({
@@ -115,10 +116,21 @@ def create_mailclass(name, domain):
     }
   })
   new_mailclass =  post_request(data, host + "/ga/api/v3/eng/mail_classes")
-  return new_mailclass.text
+  return "Creating mailclass:\n" + new_mailclass.text 
+
 
 def main():
-  #need a function to run the creation of every step.
+  print(create_domain("real-test-ga.com"))
+  print(create_urldomain("real-test-ga.com"))
+  for i in get_fbls():
+    print(create_fbl("real-test-ga.com", str(i)))
+  print(create_bounce("real-test-ga.com", "bounce"))
+  print(create_forward("real-test-ga.com", "abuse"))
+  print(create_forward("real-test-ga.com", "webmaster"))
+  print(create_user("real-test-ga.com", "info"))
+  print(create_user("real-test-ga.com", "postmaster"))
+  print(create_vmta("realtestga", "10.10.10.1", "realtestga"))
+  print(create_mailclass("realtestga", "real-test-ga.com"))
 
 if __name__ == "__main__":
   main()
